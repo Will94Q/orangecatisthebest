@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BOOK☆WALKER 優惠計算機 v2</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --bw-blue:#0b6fb8;
+    --bw-dark:#0a4d7a;
+    --bw-light:#e8f3fb;
+    --bw-accent:#f5a623;
+    --border:#cdd9e3;
+    --ink:#1f2d3a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;font-family:"Microsoft JhengHei","PingFang TC","Helvetica Neue",Arial,sans-serif;
+    background:#f3f6f9;color:var(--ink);
+  }
+  header{
+    background:linear-gradient(135deg,var(--bw-blue),var(--bw-dark));
+    color:#fff;padding:22px 28px;
+  }
+  header h1{margin:0;font-size:22px;letter-spacing:1px;}
+  header .ver{
+    display:inline-block;background:var(--bw-accent);color:#3a2b00;font-size:12px;
+    font-weight:700;border-radius:4px;padding:1px 7px;margin-left:8px;vertical-align:3px;
+  }
+  header p{margin:6px 0 0;font-size:13px;opacity:.85;}
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px;}
+  .card{
+    background:#fff;border:1px solid var(--border);border-radius:10px;
+    padding:18px 20px;margin-bottom:18px;box-shadow:0 1px 3px rgba(0,0,0,.05);
+  }
+  .card h2{
+    margin:0 0 14px;font-size:16px;color:var(--bw-dark);
+    border-left:4px solid var(--bw-accent);padding-left:10px;
+  }
+  .row{display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;}
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{font-size:12px;color:#5a6b7a;font-weight:600;}
+  .field input{
+    width:130px;padding:7px 9px;border:1px solid var(--border);border-radius:6px;
+    font-size:14px;
+  }
+  .field input:focus{outline:none;border-color:var(--bw-blue);box-shadow:0 0 0 2px var(--bw-light);}
+  .field input.txt{width:160px;}
+  .field input.small{width:80px;}
+  .group-card{
+    border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;
+    background:#fbfdff;
+  }
+  .group-card .ghead{
+    display:flex;flex-wrap:wrap;gap:14px 22px;align-items:flex-end;margin-bottom:12px;
+  }
+  table.cols{border-collapse:collapse;width:100%;}
+  table.cols th,table.cols td{
+    border:1px solid var(--border);padding:5px 6px;text-align:center;font-size:13px;
+  }
+  table.cols th{background:var(--bw-light);color:var(--bw-dark);font-weight:600;}
+  table.cols td input{
+    width:84px;padding:5px;border:1px solid var(--border);border-radius:5px;
+    font-size:13px;text-align:right;
+  }
+  table.cols td input:focus{outline:none;border-color:var(--bw-blue);}
+  .btnrow{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px;}
+  button{
+    cursor:pointer;border:none;border-radius:7px;font-size:14px;font-weight:600;
+    padding:10px 22px;transition:.15s;
+  }
+  .btn-primary{background:var(--bw-blue);color:#fff;}
+  .btn-primary:hover{background:var(--bw-dark);}
+  .btn-accent{background:var(--bw-accent);color:#3a2b00;}
+  .btn-accent:hover{filter:brightness(.95);}
+  .btn-ghost{background:#eef2f6;color:var(--ink);}
+  .btn-ghost:hover{background:#e2e8ee;}
+  .btn-mini{padding:5px 12px;font-size:12px;background:#eef2f6;color:var(--ink);}
+  .btn-mini:hover{background:#e2e8ee;}
+  /* output table */
+  #outWrap{overflow-x:auto;}
+  table.calc{border-collapse:collapse;font-size:13px;white-space:nowrap;}
+  table.calc th,table.calc td{
+    border:1px solid #b9c6d2;padding:5px 9px;text-align:right;
+  }
+  table.calc .lbl{text-align:left;background:#f1f5f9;font-weight:600;position:sticky;left:0;}
+  table.calc .vbadge{
+    display:inline-block;background:var(--bw-accent);color:#3a2b00;font-size:10px;
+    border-radius:3px;padding:0 4px;margin-right:5px;font-weight:700;vertical-align:1px;
+  }
+  table.calc .grphead{
+    background:var(--bw-blue);color:#fff;text-align:center;font-weight:700;
+  }
+  table.calc .colhead{background:var(--bw-light);color:var(--bw-dark);text-align:center;}
+  table.calc .calc-cell{background:#fff;}
+  table.calc .input-cell{background:#fff8ec;}
+  table.calc .span-cell{background:#eef6fc;text-align:center;}
+  table.calc tr.section td{background:#fff;border:none;height:8px;padding:0;}
+  table.calc .ok{color:#1b8a3a;font-weight:700;}
+  table.calc .bad{color:#c0392b;font-weight:700;}
+  table.calc .total td{background:#fff3d6;font-weight:700;}
+  .hint{font-size:12px;color:#7a8a98;margin-top:8px;}
+  .empty-note{color:#7a8a98;font-size:14px;padding:10px 0;}
+</style>
+</head>
+<body>
+<header>
+  <h1>BOOK☆WALKER 優惠計算機<span class="ver">v2</span></h1>
+  <p>輸入變數欄(V)的數值，點「產出計算表」即可產生完整計算表，並可下載 Excel。v2 新增：每組「可獲得調整」選填欄。</p>
+</header>
+
+<div class="wrap">
+
+  <!-- 設定 -->
+  <div class="card">
+    <h2>① 表格設定</h2>
+    <div class="row">
+      <div class="field">
+        <label>點數倍送組數</label>
+        <input type="number" id="groupCount" class="small" min="1" max="12" value="3">
+      </div>
+      <button class="btn-ghost" onclick="buildForm()">套用設定 / 重建表單</button>
+    </div>
+    <div class="hint">每組可在下方各自設定書籍欄位數。變更組數後請按「套用設定」。</div>
+  </div>
+
+  <!-- 全域變數 -->
+  <div class="card">
+    <h2>② 全域變數（V）</h2>
+    <div class="row" id="globalVars"></div>
+  </div>
+
+  <!-- 各組變數 -->
+  <div class="card">
+    <h2>③ 各組變數（V）</h2>
+    <div id="groups"></div>
+  </div>
+
+  <!-- 動作 -->
+  <div class="card">
+    <h2>④ 產出</h2>
+    <div class="btnrow">
+      <button class="btn-primary" onclick="generate()">產出計算表</button>
+      <button class="btn-accent" id="dlBtn" onclick="downloadExcel()" style="display:none;">下載 Excel</button>
+      <button class="btn-ghost" onclick="window.print()">列印</button>
+    </div>
+  </div>
+
+  <!-- 結果 -->
+  <div class="card">
+    <h2>⑤ 計算表</h2>
+    <div id="outWrap"><div class="empty-note">尚未產出，請填妥變數後按「產出計算表」。</div></div>
+  </div>
+
+</div>
+
+<script>
+/* ============ 工具 ============ */
+// Excel 風格四捨五入（離 0 進位）
+function eround(x,d){
+  if(!isFinite(x))return 0;
+  const m=Math.pow(10,d||0);
+  return (x<0?-1:1)*Math.round(Math.abs(x)*m)/m;
+}
+function num(v){const n=parseFloat(v);return isFinite(n)?n:0;}
+function $(id){return document.getElementById(id);}
+
+/* 全域變數定義：id, 標籤, 預設placeholder */
+const GLOBAL_VARS=[
+  {id:'couponThreshold',label:'優惠券滿額',ph:'例 399'},
+  {id:'thresholdFixed', label:'滿額折扣(定額)',ph:'例 0'},
+  {id:'thresholdStd',   label:'滿額標準',ph:'例 1200'},
+  {id:'pointsUsed',     label:'使用點數',ph:'例 -571'},
+  {id:'pointsBonus',    label:'點數滿額加贈',ph:'例 0'},
+  {id:'originalPoints', label:'原點數',ph:'例 1009.6'},
+];
+/* 每組變數定義 */
+const GROUP_VARS=[
+  {id:'couponDiscount',label:'優惠券折抵',ph:'例 0.9'},
+  {id:'thresholdRate', label:'滿額折扣(折數)',ph:'例 0.9'},
+  {id:'pointsMul',     label:'點數倍送',ph:'例 2'},
+  {id:'gainAdjust',    label:'可獲得調整(選填)',ph:'例 -0.05'},
+];
+
+/* ============ 建立表單 ============ */
+function buildForm(){
+  // 全域
+  const gv=$('globalVars'); gv.innerHTML='';
+  GLOBAL_VARS.forEach(v=>{
+    const old=$('gv_'+v.id)?$('gv_'+v.id).value:'';
+    const f=document.createElement('div');f.className='field';
+    f.innerHTML='<label>'+v.label+'</label>'+
+      '<input type="number" step="any" id="gv_'+v.id+'" placeholder="'+v.ph+'">';
+    gv.appendChild(f);
+    if(old!=='') f.querySelector('input').value=old;
+  });
+  // 各組
+  const n=Math.max(1,Math.min(12,parseInt($('groupCount').value)||1));
+  $('groupCount').value=n;
+  const host=$('groups');
+  // 保留舊值
+  const prev={};
+  document.querySelectorAll('#groups input').forEach(i=>prev[i.id]=i.value);
+  host.innerHTML='';
+  for(let g=0;g<n;g++){
+    const prevCols=prev['colcount_'+g]?parseInt(prev['colcount_'+g]):(g===0?7:5);
+    const cols=Math.max(1,Math.min(20,prevCols||5));
+    const card=document.createElement('div');card.className='group-card';
+    let gv2='';
+    GROUP_VARS.forEach(v=>{
+      gv2+='<div class="field"><label>'+v.label+'</label>'+
+        '<input type="number" step="any" id="g'+g+'_'+v.id+'" placeholder="'+v.ph+'"></div>';
+    });
+    card.innerHTML=
+      '<div class="ghead">'+
+        '<div class="field"><label>組別名稱</label>'+
+          '<input type="text" class="txt" id="gname_'+g+'" value="點數倍送'+(g+1)+'."></div>'+
+        '<div class="field"><label>書籍欄位數</label>'+
+          '<input type="number" class="small" min="1" max="20" id="colcount_'+g+'" value="'+cols+'"></div>'+
+        '<button class="btn-mini" onclick="rebuildCols('+g+')">套用欄位數</button>'+
+        gv2+
+      '</div>'+
+      '<div id="coltbl_'+g+'"></div>';
+    host.appendChild(card);
+    // 還原值
+    GROUP_VARS.forEach(v=>{const k='g'+g+'_'+v.id;if(prev[k]!==undefined)$(k).value=prev[k];});
+    if(prev['gname_'+g]!==undefined)$('gname_'+g).value=prev['gname_'+g];
+    rebuildCols(g,prev);
+  }
+}
+
+/* 建立某組的「原價/折數/本數」欄位表 */
+function rebuildCols(g,prev){
+  prev=prev||{};
+  // 收集現有值
+  document.querySelectorAll('#coltbl_'+g+' input').forEach(i=>{if(prev[i.id]===undefined)prev[i.id]=i.value;});
+  const cols=Math.max(1,Math.min(20,parseInt($('colcount_'+g).value)||1));
+  $('colcount_'+g).value=cols;
+  let head='<tr><th>項目</th>';
+  for(let c=0;c<cols;c++)head+='<th>書'+(c+1)+'</th>';
+  head+='</tr>';
+  const fields=[['price','原價'],['rate','折數'],['qty','本數']];
+  let body='';
+  fields.forEach(([key,lbl])=>{
+    body+='<tr><th>'+lbl+'</th>';
+    for(let c=0;c<cols;c++){
+      const id='g'+g+'c'+c+'_'+key;
+      const val=prev[id]!==undefined?prev[id]:'';
+      body+='<td><input type="number" step="any" id="'+id+'" value="'+val+'"></td>';
+    }
+    body+='</tr>';
+  });
+  $('coltbl_'+g).innerHTML='<table class="cols"><thead>'+head+'</thead><tbody>'+body+'</tbody></table>';
+}
+
+/* ============ 讀取輸入 ============ */
+function readModel(){
+  const n=parseInt($('groupCount').value)||1;
+  const m={global:{},groups:[]};
+  GLOBAL_VARS.forEach(v=>m.global[v.id]=num($('gv_'+v.id).value));
+  for(let g=0;g<n;g++){
+    const cols=parseInt($('colcount_'+g).value)||1;
+    const gObj={name:$('gname_'+g).value||('組'+(g+1)),cols:cols,vars:{},cells:[]};
+    GROUP_VARS.forEach(v=>gObj.vars[v.id]=num($('g'+g+'_'+v.id).value));
+    for(let c=0;c<cols;c++){
+      gObj.cells.push({
+        price:num($('g'+g+'c'+c+'_price').value),
+        rate :num($('g'+g+'c'+c+'_rate').value),
+        qty  :num($('g'+g+'c'+c+'_qty').value),
+      });
+    }
+    m.groups.push(gObj);
+  }
+  return m;
+}
+
+/* ============ 計算（對應 xlsx 公式） ============ */
+function compute(m){
+  const G=m.global, R={groups:[]};
+  // --- 逐欄 / 逐組 ---
+  let grandTotal=0, origTotalAll=0;
+  m.groups.forEach(gr=>{
+    const gR={cells:[],totalSum:0,origSum:0};
+    gr.cells.forEach(cell=>{
+      const after2=cell.price*cell.rate;            // 折扣後(2位)  =原價*折數
+      const after =eround(after2,0);                // 折扣後       =ROUND(.,0)
+      const total =after*cell.qty;                  // 總價         =折扣後*本數
+      const origTotal=cell.price*cell.qty;          // 原總價       =原價*本數
+      gR.cells.push({after2,after,total,origTotal});
+      gR.totalSum+=total;                           // 總價合計
+      gR.origSum +=origTotal;
+    });
+    grandTotal+=gR.totalSum;
+    origTotalAll+=gR.origSum;
+    R.groups.push(gR);
+  });
+  R.grandTotal=grandTotal;                          // 加總
+  R.origTotalAll=origTotalAll;
+  // --- 優惠券門檻檢查 ---
+  R.check1 = grandTotal>=G.couponThreshold
+      ? '滿'+G.couponThreshold : '無法使用優惠券';
+  // --- 折畢 (row15) / 折畢合計 (row16) ---
+  let discountedSum=0;
+  m.groups.forEach((gr,i)=>{
+    R.groups[i].discounted=eround(R.groups[i].totalSum*gr.vars.couponDiscount,0);
+    discountedSum+=R.groups[i].discounted;
+  });
+  R.discountedSum=discountedSum;
+  // --- 滿額標準檢查 (row20) ---
+  R.check2 = discountedSum>=G.thresholdStd
+      ? '滿'+G.thresholdStd : '未滿額';
+  // --- 滿額折畢 (row21) / 折畢合計 (row22) ---
+  let thDiscSum=0;
+  m.groups.forEach((gr,i)=>{
+    R.groups[i].thDisc=R.groups[i].discounted*gr.vars.thresholdRate;
+    thDiscSum+=R.groups[i].thDisc;
+  });
+  R.discountedSum2=eround(thDiscSum-G.thresholdFixed,0);
+  // --- 實際支付 (row24) ---
+  m.groups.forEach((gr,i)=>{
+    const td=R.groups[i].thDisc;
+    R.groups[i].actualPay = R.discountedSum2!==0
+      ? eround(td + G.pointsUsed/R.discountedSum2*td,0)
+      : eround(td,0);
+  });
+  // --- 本次使用&獲得 (row25) = 折畢合計 + 使用點數 ---
+  R.useAndGet = R.discountedSum2 + G.pointsUsed;
+  // --- 可獲得點數 (row28) = 實際支付*0.01*點數倍送 + 可獲得調整 ; 點數合計 (row30) ---
+  let pointsGainSum=0;
+  m.groups.forEach((gr,i)=>{
+    R.groups[i].pointsGain = R.groups[i].actualPay*0.01*gr.vars.pointsMul + gr.vars.gainAdjust;
+    pointsGainSum+=R.groups[i].pointsGain;
+  });
+  R.pointsGainSum=pointsGainSum;
+  R.pointsTotal = pointsGainSum + G.pointsBonus;
+  // --- 實際折數 (row34) / 合計折數 (row35) ---
+  m.groups.forEach((gr,i)=>{
+    const gR=R.groups[i];
+    gR.actualRate = gR.origSum!==0 ? (gR.thDisc-gR.pointsGain)/gR.origSum : 0;
+  });
+  R.totalRate = origTotalAll!==0
+    ? (R.discountedSum2 - pointsGainSum)/origTotalAll : 0;
+  // --- 原點數收支 (row40/41) ---
+  R.useAndGet2 = G.pointsUsed + R.pointsTotal;       // 本次使用&獲得
+  R.remaining  = G.originalPoints + R.useAndGet2;    // 剩餘點數
+  return R;
+}
+
+/* ============ 格式化 ============ */
+function fInt(x){return Math.round(x*100)/100===Math.round(x)?String(Math.round(x)):(Math.round(x*100)/100).toString();}
+function f2(x){return (Math.round(x*100)/100).toFixed(2);}
+function fPct(x){return (x*100).toFixed(2)+'%';}
+function fNum(x){const r=Math.round(x*1e6)/1e6;return String(r);}
+
+/* ============ 計算表 ============ */
+let LAST=null; // {model,result}
+
+function generate(){
+  const model=readModel();
+  const result=compute(model);
+  LAST={model,result};
+  renderTable(model,result);
+  $('dlBtn').style.display='inline-block';
+}
+
+function renderTable(m,R){
+  const totalCols=m.groups.reduce((s,g)=>s+g.cols,0);
+  let html='<table class="calc">';
+  // 表頭：組別
+  html+='<tr><th class="lbl">項目</th>';
+  m.groups.forEach(g=>{
+    html+='<th class="grphead" colspan="'+g.cols+'">'+esc(g.name)+'</th>';
+  });
+  html+='</tr>';
+  // 表頭：書N
+  html+='<tr><th class="lbl"></th>';
+  m.groups.forEach(g=>{for(let c=0;c<g.cols;c++)html+='<th class="colhead">書'+(c+1)+'</th>';});
+  html+='</tr>';
+
+  // --- helper rows ---
+  function rowPerCol(label,isV,getter,fmt,cls){
+    let r='<tr'+(cls?' class="'+cls+'"':'')+'><td class="lbl">'+(isV?'<span class="vbadge">V</span>':'')+label+'</td>';
+    m.groups.forEach((g,gi)=>{
+      g.cells.forEach((cell,ci)=>{
+        r+='<td class="'+(isV?'input-cell':'calc-cell')+'">'+fmt(getter(gi,ci))+'</td>';
+      });
+    });
+    return r+'</tr>';
+  }
+  function rowPerGroup(label,isV,getter,fmt,cls){
+    let r='<tr'+(cls?' class="'+cls+'"':'')+'><td class="lbl">'+(isV?'<span class="vbadge">V</span>':'')+label+'</td>';
+    m.groups.forEach((g,gi)=>{
+      r+='<td class="'+(isV?'input-cell':'calc-cell')+' span-cell" colspan="'+g.cols+'">'+fmt(getter(gi))+'</td>';
+    });
+    return r+'</tr>';
+  }
+  function rowGlobal(label,isV,value,fmt,cls){
+    return '<tr'+(cls?' class="'+cls+'"':'')+'><td class="lbl">'+(isV?'<span class="vbadge">V</span>':'')+label+
+      '</td><td class="'+(isV?'input-cell':'calc-cell')+' span-cell" colspan="'+totalCols+'">'+fmt(value)+'</td></tr>';
+  }
+  function section(){return '<tr class="section"><td colspan="'+(totalCols+1)+'"></td></tr>';}
+
+  // === 區塊一：總價 ===
+  html+=rowPerCol('原價',true,(g,c)=>m.groups[g].cells[c].price,fInt);
+  html+=rowPerCol('折數',true,(g,c)=>m.groups[g].cells[c].rate,fNum);
+  html+=rowPerCol('折扣後(2位)',false,(g,c)=>R.groups[g].cells[c].after2,f2);
+  html+=rowPerCol('折扣後',false,(g,c)=>R.groups[g].cells[c].after,fInt);
+  html+=rowPerCol('本數',true,(g,c)=>m.groups[g].cells[c].qty,fInt);
+  html+=rowPerCol('總價',false,(g,c)=>R.groups[g].cells[c].total,fInt);
+  html+=rowPerGroup('總價合計',false,g=>R.groups[g].totalSum,fInt);
+  html+=rowGlobal('加總',false,R.grandTotal,fInt,'total');
+  html+=section();
+
+  // === 區塊二：優惠券 / 滿額 / 折畢 ===
+  html+=rowGlobal('優惠券滿額',true,m.global.couponThreshold,fInt);
+  html+=rowGlobal('check',false,R.check1,checkFmt);
+  html+=rowPerGroup('優惠券折抵',true,g=>m.groups[g].vars.couponDiscount,fNum);
+  html+=rowPerGroup('折畢',false,g=>R.groups[g].discounted,fInt);
+  html+=rowGlobal('折畢合計',false,R.discountedSum,fInt);
+  html+=rowGlobal('滿額折扣(定額)',true,m.global.thresholdFixed,fInt);
+  html+=rowPerGroup('滿額折扣(折數)',true,g=>m.groups[g].vars.thresholdRate,fNum);
+  html+=rowGlobal('滿額標準',true,m.global.thresholdStd,fInt);
+  html+=rowGlobal('check',false,R.check2,checkFmt);
+  html+=rowPerGroup('滿額折畢',false,g=>R.groups[g].thDisc,f2);
+  html+=rowGlobal('折畢合計',false,R.discountedSum2,fInt,'total');
+  html+=rowGlobal('使用點數',true,m.global.pointsUsed,fInt);
+  html+=rowPerGroup('實際支付',false,g=>R.groups[g].actualPay,fInt);
+  html+=rowGlobal('本次使用&獲得',false,R.useAndGet,fInt);
+  html+=section();
+
+  // === 區塊三：點數 ===
+  html+=rowPerGroup('點數倍送',true,g=>m.groups[g].vars.pointsMul,fNum);
+  html+=rowPerGroup('可獲得調整',true,g=>m.groups[g].vars.gainAdjust,fNum);
+  html+=rowPerGroup('可獲得',false,g=>R.groups[g].pointsGain,f2);
+  html+=rowGlobal('點數滿額加贈',true,m.global.pointsBonus,fNum);
+  html+=rowGlobal('點數合計',false,R.pointsTotal,f2,'total');
+  html+=section();
+
+  // === 區塊四：折數分析 ===
+  html+=rowPerCol('原總價',false,(g,c)=>R.groups[g].cells[c].origTotal,fInt);
+  html+=rowGlobal('加總',false,R.origTotalAll,fInt);
+  html+=rowPerGroup('實際折數',false,g=>R.groups[g].actualRate,fPct);
+  html+=rowGlobal('合計折數',false,R.totalRate,fPct);
+  html+=section();
+
+  // === 區塊五：點數收支 ===
+  html+=rowGlobal('原點數',true,m.global.originalPoints,fNum);
+  html+=rowGlobal('本次使用&獲得',false,R.useAndGet2,f2);
+  html+=rowGlobal('剩餘點數',false,R.remaining,f2,'total');
+
+  html+='</table>';
+  html+='<div class="hint">標示 <span class="vbadge">V</span> 的列為輸入變數；橘底為輸入值，白底為計算值。'+
+        '「可獲得 = 實際支付 × 0.01 × 點數倍送 + 可獲得調整」，調整欄留空視為 0。</div>';
+  $('outWrap').innerHTML=html;
+}
+function checkFmt(v){
+  const ok=!(v==='無法使用優惠券'||v==='未滿額');
+  return '<span class="'+(ok?'ok':'bad')+'">'+esc(v)+'</span>';
+}
+function esc(s){return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+/* ============ Excel 下載 ============ */
+function downloadExcel(){
+  if(!LAST){alert('請先產出計算表');return;}
+  const m=LAST.model,R=LAST.result;
+  const totalCols=m.groups.reduce((s,g)=>s+g.cols,0);
+  const aoa=[];
+  // 表頭1
+  let h1=['項目'];m.groups.forEach(g=>{h1.push(g.name);for(let c=1;c<g.cols;c++)h1.push('');});
+  aoa.push(h1);
+  // 表頭2
+  let h2=[''];m.groups.forEach(g=>{for(let c=0;c<g.cols;c++)h2.push('書'+(c+1));});
+  aoa.push(h2);
+
+  const perCol=(label,getter)=>{const r=[label];m.groups.forEach((g,gi)=>g.cells.forEach((_,ci)=>r.push(round6(getter(gi,ci)))));aoa.push(r);};
+  const perGrp=(label,getter)=>{const r=[label];m.groups.forEach((g,gi)=>{r.push(round6(getter(gi)));for(let c=1;c<g.cols;c++)r.push('');});aoa.push(r);};
+  const glob  =(label,value)=>{const r=[label,value];for(let c=1;c<totalCols;c++)r.push('');aoa.push(r);};
+  const blank =()=>aoa.push([]);
+
+  perCol('原價',(g,c)=>m.groups[g].cells[c].price);
+  perCol('折數',(g,c)=>m.groups[g].cells[c].rate);
+  perCol('折扣後(2位)',(g,c)=>R.groups[g].cells[c].after2);
+  perCol('折扣後',(g,c)=>R.groups[g].cells[c].after);
+  perCol('本數',(g,c)=>m.groups[g].cells[c].qty);
+  perCol('總價',(g,c)=>R.groups[g].cells[c].total);
+  perGrp('總價合計',g=>R.groups[g].totalSum);
+  glob('加總',round6(R.grandTotal));
+  blank();
+  glob('優惠券滿額',m.global.couponThreshold);
+  glob('check',R.check1);
+  perGrp('優惠券折抵',g=>m.groups[g].vars.couponDiscount);
+  perGrp('折畢',g=>R.groups[g].discounted);
+  glob('折畢合計',round6(R.discountedSum));
+  glob('滿額折扣(定額)',m.global.thresholdFixed);
+  perGrp('滿額折扣(折數)',g=>m.groups[g].vars.thresholdRate);
+  glob('滿額標準',m.global.thresholdStd);
+  glob('check',R.check2);
+  perGrp('滿額折畢',g=>R.groups[g].thDisc);
+  glob('折畢合計',round6(R.discountedSum2));
+  glob('使用點數',m.global.pointsUsed);
+  perGrp('實際支付',g=>R.groups[g].actualPay);
+  glob('本次使用&獲得',round6(R.useAndGet));
+  blank();
+  perGrp('點數倍送',g=>m.groups[g].vars.pointsMul);
+  perGrp('可獲得調整',g=>m.groups[g].vars.gainAdjust);
+  perGrp('可獲得',g=>R.groups[g].pointsGain);
+  glob('點數滿額加贈',m.global.pointsBonus);
+  glob('點數合計',round6(R.pointsTotal));
+  blank();
+  perCol('原總價',(g,c)=>R.groups[g].cells[c].origTotal);
+  glob('加總',round6(R.origTotalAll));
+  perGrp('實際折數',g=>R.groups[g].actualRate);
+  glob('合計折數',round6(R.totalRate));
+  blank();
+  glob('原點數',m.global.originalPoints);
+  glob('本次使用&獲得',round6(R.useAndGet2));
+  glob('剩餘點數',round6(R.remaining));
+
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  // 合併組別表頭
+  ws['!merges']=ws['!merges']||[];
+  let col=1;
+  m.groups.forEach(g=>{
+    if(g.cols>1)ws['!merges'].push({s:{r:0,c:col},e:{r:0,c:col+g.cols-1}});
+    col+=g.cols;
+  });
+  ws['!cols']=[{wch:16}].concat(Array(totalCols).fill({wch:11}));
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'BOOK☆WALKER優惠計算');
+  XLSX.writeFile(wb,'BOOK☆WALKER計算表_v2.xlsx');
+}
+function round6(x){return typeof x==='number'?Math.round(x*1e6)/1e6:x;}
+
+/* 初始化 */
+buildForm();
+</script>
+</body>
+</html>
